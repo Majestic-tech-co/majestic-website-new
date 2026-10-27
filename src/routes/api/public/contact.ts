@@ -133,9 +133,15 @@ async function sendInquiryEmail(submission: Submission): Promise<boolean> {
   return true;
 }
 
+// Only sent in error responses, so the address isn't in the page for scrapers.
+const fallbackContact = () =>
+  `You can also email us directly at ${process.env.CONTACT_TO_EMAIL || DEFAULT_TO_EMAIL}.`;
+
 const tooManyRequests = () =>
   Response.json(
-    { error: "Too many messages right now. Please try again in a few minutes." },
+    {
+      error: `Too many messages right now. Please try again in a few minutes. ${fallbackContact()}`,
+    },
     { status: 429, headers: { "retry-after": "600" } },
   );
 
@@ -186,10 +192,15 @@ export const Route = createFileRoute("/api/public/contact")({
           return tooManyRequests();
         }
 
-        const sent = await sendInquiryEmail({ name, company, email, phone, message });
+        let sent = false;
+        try {
+          sent = await sendInquiryEmail({ name, company, email, phone, message });
+        } catch (error) {
+          console.error("[contact] Resend request failed", error);
+        }
         if (!sent) {
           return Response.json(
-            { error: "Could not send your message. Please try again." },
+            { error: `Could not send your message. ${fallbackContact()}` },
             { status: 500 },
           );
         }

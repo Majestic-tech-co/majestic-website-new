@@ -1,24 +1,25 @@
-# Your Website's New Home
+# Majestic IT/AI Solutions website
 
-can you help me rebuild my website on lovable.
-
-This project was built with [Lovable](https://lovable.dev).
-
-## Build with Lovable
-
-Continue developing this project in the [Lovable editor](https://lovable.dev/projects/fe4ac1de-1337-4c8f-9840-b659e89df3d0).
-
-- **Ship faster**: describe what you want to build and Lovable handles the code.
-- **Stay in sync**: every change made in Lovable is committed straight to this repository.
-- **Full ownership**: this code is yours. Push to `main` on GitHub and your changes sync back into Lovable, ready for your next prompt.
+Single-page site built with [TanStack Start](https://tanstack.com/start), React and Tailwind CSS, deployed on Vercel.
 
 ## Development
 
-Prefer working locally? You need Node.js and npm — [install with nvm](https://github.com/nvm-sh/nvm#installing-and-updating).
+Requires [Bun](https://bun.sh).
 
 ```sh
-git clone <this-repository-url>
-cd <repository-name>
-npm i
-npm run dev
+bun install
+bun run dev
 ```
+
+## Contact form
+
+`src/routes/api/public/contact.ts` emails each submission through [Resend](https://resend.com).
+Set these environment variables in Vercel:
+
+| Variable | Required | Purpose |
+| --- | --- | --- |
+| `RESEND_API_KEY` | Yes | Resend API key with sending access |
+| `CONTACT_TO_EMAIL` | No | Where enquiries go (default `majestic-it@majestictech.ca`) |
+| `CONTACT_FROM_EMAIL` | No | Sender address (default `Majestic Website <website@majestictech.ca>`) |
+
+Keep secrets in Vercel's environment settings, never in the repo.

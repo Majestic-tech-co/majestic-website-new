@@ -38,7 +38,6 @@ async function normalizeCatastrophicSsrResponse(response: Response): Promise<Res
 }
 
 // TanStack Start inlines hydration scripts, so script-src needs 'unsafe-inline'.
-// Lovable's editor embeds the site in an iframe, hence the extra frame-ancestors.
 const CONTENT_SECURITY_POLICY = [
   "default-src 'self'",
   "script-src 'self' 'unsafe-inline'",
@@ -49,7 +48,7 @@ const CONTENT_SECURITY_POLICY = [
   "object-src 'none'",
   "base-uri 'self'",
   "form-action 'self'",
-  "frame-ancestors 'self' https://lovable.dev https://*.lovable.dev https://*.lovable.app",
+  "frame-ancestors 'none'",
   "upgrade-insecure-requests",
 ].join("; ");
 
@@ -57,6 +56,8 @@ const SECURITY_HEADERS: Record<string, string> = {
   "content-security-policy": CONTENT_SECURITY_POLICY,
   "strict-transport-security": "max-age=63072000; includeSubDomains",
   "x-content-type-options": "nosniff",
+  // Older browsers ignore CSP frame-ancestors.
+  "x-frame-options": "DENY",
   "referrer-policy": "strict-origin-when-cross-origin",
   "permissions-policy": "camera=(), microphone=(), geolocation=(), payment=()",
 };
