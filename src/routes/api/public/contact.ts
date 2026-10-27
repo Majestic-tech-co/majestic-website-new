@@ -14,15 +14,18 @@ const ContactSchema = z.object({
 // Largest body a valid submission can produce, with generous headroom.
 const MAX_BODY_BYTES = 10_000;
 
-// Per-IP limit. In-memory, so it only applies within one server instance —
-// the global cap below is the backstop across instances.
+// Rate limits are in-memory, so they apply per server instance.
 const IP_WINDOW_MS = 10 * 60 * 1000;
 const IP_MAX_REQUESTS = 5;
 const ipHits = new Map<string, number[]>();
 
-// Global cap on stored submissions, checked against the database.
+// Cap on emails sent, so a flood can't fill the inbox or burn the Resend quota.
 const GLOBAL_WINDOW_MS = 10 * 60 * 1000;
-const GLOBAL_MAX_SUBMISSIONS = 30;
+const GLOBAL_MAX_EMAILS = 30;
+let emailsSent: number[] = [];
+
+const DEFAULT_TO_EMAIL = "majestic-it@majestictech.ca";
+const DEFAULT_FROM_EMAIL = "Majestic Website <website@majestictech.ca>";
 
 // Only trust the IP header the hosting platform sets itself. Any other header
 // passes through from the client untouched and can be forged per request.
@@ -71,6 +74,63 @@ function isSameOrigin(request: Request): boolean {
     request.headers.get("host"),
   ];
   return allowedHosts.includes(originHost);
+}
+
+function isGloballyRateLimited(): boolean {
+  const now = Date.now();
+  emailsSent = emailsSent.filter((t) => now - t < GLOBAL_WINDOW_MS);
+  return emailsSent.length >= GLOBAL_MAX_EMAILS;
+}
+
+type Submission = {
+  name: string;
+  company: string;
+  email: string;
+  phone?: string;
+  message: string;
+};
+
+// Plain text only, so nothing a visitor types can be rendered as HTML.
+async function sendInquiryEmail(submission: Submission): Promise<boolean> {
+  const apiKey = process.env.RESEND_API_KEY;
+  if (!apiKey) {
+    console.error("[contact] Missing RESEND_API_KEY environment variable");
+    return false;
+  }
+
+  const { name, company, email, phone, message } = submission;
+  const oneLine = (value: string) => value.replace(/[\r\n]+/g, " ");
+
+  const res = await fetch("https://api.resend.com/emails", {
+    method: "POST",
+    headers: {
+      authorization: `Bearer ${apiKey}`,
+      "content-type": "application/json",
+    },
+    body: JSON.stringify({
+      from: process.env.CONTACT_FROM_EMAIL || DEFAULT_FROM_EMAIL,
+      to: [process.env.CONTACT_TO_EMAIL || DEFAULT_TO_EMAIL],
+      reply_to: email,
+      subject: oneLine(`New inquiry from ${name} (${company})`),
+      text: [
+        `Name: ${oneLine(name)}`,
+        `Company: ${oneLine(company)}`,
+        `Email: ${email}`,
+        `Phone: ${oneLine(phone || "—")}`,
+        "",
+        "Message:",
+        message,
+        "",
+        `Sent from the website contact form at ${new Date().toISOString()}`,
+      ].join("\n"),
+    }),
+  });
+
+  if (!res.ok) {
+    console.error("[contact] Resend error", res.status, await res.text());
+    return false;
+  }
+  return true;
 }
 
 const tooManyRequests = () =>
@@ -122,36 +182,18 @@ export const Route = createFileRoute("/api/public/contact")({
           return Response.json({ ok: true }, { status: 200 });
         }
 
-        const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
-
-        const since = new Date(Date.now() - GLOBAL_WINDOW_MS).toISOString();
-        const { count, error: countError } = await supabaseAdmin
-          .from("contact_submissions")
-          .select("id", { count: "exact", head: true })
-          .gte("created_at", since);
-
-        if (countError) {
-          console.error("[contact] rate-limit count error", countError);
-        } else if ((count ?? 0) >= GLOBAL_MAX_SUBMISSIONS) {
+        if (isGloballyRateLimited()) {
           return tooManyRequests();
         }
 
-        const { error } = await supabaseAdmin.from("contact_submissions").insert({
-          name,
-          company,
-          email,
-          phone: phone || null,
-          message,
-          user_agent: request.headers.get("user-agent") ?? null,
-        });
-
-        if (error) {
-          console.error("[contact] insert error", error);
+        const sent = await sendInquiryEmail({ name, company, email, phone, message });
+        if (!sent) {
           return Response.json(
-            { error: "Could not save your message. Please try again." },
+            { error: "Could not send your message. Please try again." },
             { status: 500 },
           );
         }
+        emailsSent.push(Date.now());
 
         return Response.json({ ok: true }, { status: 200 });
       },

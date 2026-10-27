@@ -16,7 +16,7 @@ dist-ssr
 .nitro
 *.local
 
-# Environment files. Keep secrets (e.g. SUPABASE_SERVICE_ROLE_KEY) in the
+# Environment files. Keep secrets (e.g. RESEND_API_KEY) in the
 # hosting provider's environment settings, never in the repo.
 .env
 .env.*

@@ -18,10 +18,5 @@ const errorMiddleware = createMiddleware().server(async ({ next }) => {
 });
 
 export const startInstance = createStart(() => ({
-  // attachSupabaseAuth is left out because nothing uses Supabase auth yet, and it
-  // pulls the whole Supabase client (~200 kB) into the browser bundle. Add it back
-  // (from "@/integrations/supabase/auth-attacher") before adding server functions
-  // that use requireSupabaseAuth.
-  functionMiddleware: [],
   requestMiddleware: [errorMiddleware],
 }));
