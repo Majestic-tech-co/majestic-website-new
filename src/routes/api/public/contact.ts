@@ -8,32 +8,106 @@ const ContactSchema = z.object({
   phone: z.string().trim().max(40).optional().or(z.literal("")),
   message: z.string().trim().min(10, "Please add a bit more detail").max(2000),
   // Honeypot - bots fill this; real users leave it blank
-  website: z.string().max(0).optional().or(z.literal("")),
+  website: z.string().max(500).optional(),
 });
 
-const corsHeaders = {
-  "Access-Control-Allow-Origin": "*",
-  "Access-Control-Allow-Methods": "POST, OPTIONS",
-  "Access-Control-Allow-Headers": "content-type",
-};
+// Largest body a valid submission can produce, with generous headroom.
+const MAX_BODY_BYTES = 10_000;
+
+// Per-IP limit. In-memory, so it only applies within one server instance —
+// the global cap below is the backstop across instances.
+const IP_WINDOW_MS = 10 * 60 * 1000;
+const IP_MAX_REQUESTS = 5;
+const ipHits = new Map<string, number[]>();
+
+// Global cap on stored submissions, checked against the database.
+const GLOBAL_WINDOW_MS = 10 * 60 * 1000;
+const GLOBAL_MAX_SUBMISSIONS = 30;
+
+function getClientIp(request: Request): string {
+  return (
+    request.headers.get("cf-connecting-ip") ??
+    request.headers.get("x-real-ip") ??
+    request.headers.get("x-forwarded-for")?.split(",")[0]?.trim() ??
+    "unknown"
+  );
+}
+
+function isIpRateLimited(ip: string): boolean {
+  const now = Date.now();
+  const recent = (ipHits.get(ip) ?? []).filter((t) => now - t < IP_WINDOW_MS);
+  recent.push(now);
+  ipHits.set(ip, recent);
+
+  // Keep the map from growing without bound.
+  if (ipHits.size > 5_000) {
+    for (const [key, hits] of ipHits) {
+      if (hits.every((t) => now - t >= IP_WINDOW_MS)) ipHits.delete(key);
+    }
+  }
+
+  return recent.length > IP_MAX_REQUESTS;
+}
+
+// Only accept submissions from this site's own pages.
+function isSameOrigin(request: Request): boolean {
+  const origin = request.headers.get("origin");
+  if (!origin) return false;
+
+  let originHost: string;
+  try {
+    originHost = new URL(origin).host;
+  } catch {
+    return false;
+  }
+
+  const allowedHosts = [
+    new URL(request.url).host,
+    request.headers.get("x-forwarded-host"),
+    request.headers.get("host"),
+  ];
+  return allowedHosts.includes(originHost);
+}
+
+const tooManyRequests = () =>
+  Response.json(
+    { error: "Too many messages right now. Please try again in a few minutes." },
+    { status: 429, headers: { "retry-after": "600" } },
+  );
 
 export const Route = createFileRoute("/api/public/contact")({
   server: {
     handlers: {
-      OPTIONS: async () => new Response(null, { status: 204, headers: corsHeaders }),
       POST: async ({ request }) => {
+        if (!isSameOrigin(request)) {
+          return Response.json({ error: "Forbidden" }, { status: 403 });
+        }
+
+        if (Number(request.headers.get("content-length") ?? 0) > MAX_BODY_BYTES) {
+          return Response.json({ error: "Request too large" }, { status: 413 });
+        }
+
+        if (isIpRateLimited(getClientIp(request))) {
+          return tooManyRequests();
+        }
+
+        const body = await request.text();
+        if (body.length > MAX_BODY_BYTES) {
+          return Response.json({ error: "Request too large" }, { status: 413 });
+        }
+
         let json: unknown;
         try {
-          json = await request.json();
+          json = JSON.parse(body);
         } catch {
-          return Response.json({ error: "Invalid JSON" }, { status: 400, headers: corsHeaders });
+          return Response.json({ error: "Invalid JSON" }, { status: 400 });
         }
 
         const parsed = ContactSchema.safeParse(json);
         if (!parsed.success) {
           return Response.json(
             { error: "Validation failed", issues: parsed.error.flatten() },
-            { status: 400, headers: corsHeaders },
+            { status: 400 },
           );
         }
 
@@ -41,10 +115,22 @@ export const Route = createFileRoute("/api/public/contact")({
 
         // Honeypot: silently accept
         if (website && website.length > 0) {
-          return Response.json({ ok: true }, { status: 200, headers: corsHeaders });
+          return Response.json({ ok: true }, { status: 200 });
         }
 
         const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+
+        const since = new Date(Date.now() - GLOBAL_WINDOW_MS).toISOString();
+        const { count, error: countError } = await supabaseAdmin
+          .from("contact_submissions")
+          .select("id", { count: "exact", head: true })
+          .gte("created_at", since);
+
+        if (countError) {
+          console.error("[contact] rate-limit count error", countError);
+        } else if ((count ?? 0) >= GLOBAL_MAX_SUBMISSIONS) {
+          return tooManyRequests();
+        }
 
         const { error } = await supabaseAdmin.from("contact_submissions").insert({
           name,
@@ -59,11 +145,11 @@ export const Route = createFileRoute("/api/public/contact")({
           console.error("[contact] insert error", error);
           return Response.json(
             { error: "Could not save your message. Please try again." },
-            { status: 500, headers: corsHeaders },
+            { status: 500 },
           );
         }
 
-        return Response.json({ ok: true }, { status: 200, headers: corsHeaders });
+        return Response.json({ ok: true }, { status: 200 });
       },
     },
   },
