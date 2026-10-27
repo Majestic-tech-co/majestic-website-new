@@ -24,13 +24,17 @@ const ipHits = new Map<string, number[]>();
 const GLOBAL_WINDOW_MS = 10 * 60 * 1000;
 const GLOBAL_MAX_SUBMISSIONS = 30;
 
+// Only trust the IP header the hosting platform sets itself. Any other header
+// passes through from the client untouched and can be forged per request.
 function getClientIp(request: Request): string {
-  return (
-    request.headers.get("cf-connecting-ip") ??
-    request.headers.get("x-real-ip") ??
-    request.headers.get("x-forwarded-for")?.split(",")[0]?.trim() ??
-    "unknown"
-  );
+  if (process.env.VERCEL) {
+    return (
+      request.headers.get("x-vercel-forwarded-for")?.split(",")[0]?.trim() ??
+      request.headers.get("x-real-ip") ??
+      "unknown"
+    );
+  }
+  return request.headers.get("cf-connecting-ip") ?? "unknown";
 }
 
 function isIpRateLimited(ip: string): boolean {
