@@ -336,7 +336,7 @@ function Index() {
           </ul>
         </div>
         <div className="border-t border-white/5 py-6 text-center text-xs text-slate-500">
-          &copy; {new Date().getFullYear()} Majestic Mullets IT/AI Solutions. All rights reserved.
+          &copy; {new Date().getFullYear()} Majestic IT/AI Solutions. All rights reserved.
         </div>
       </footer>
     </div>
