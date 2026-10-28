@@ -176,7 +176,7 @@ export const Route = createFileRoute("/api/public/contact")({
         const parsed = ContactSchema.safeParse(json);
         if (!parsed.success) {
           return Response.json(
-            { error: "Validation failed", issues: parsed.error.flatten() },
+            { error: "Validation failed", issues: z.flattenError(parsed.error) },
             { status: 400 },
           );
         }
