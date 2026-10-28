@@ -76,9 +76,17 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
       { charSet: "utf-8" },
       { name: "viewport", content: "width=device-width, initial-scale=1" },
       { title: "Majestic IT/AI Solutions" },
-      { name: "description", content: "Rock-solid IT and next-gen AI. From custom PC builds and robust infrastructure to intelligent automation — your all-in-one technology partner." },
+      {
+        name: "description",
+        content:
+          "Rock-solid IT and next-gen AI. From custom PC builds and robust infrastructure to intelligent automation — your all-in-one technology partner.",
+      },
       { property: "og:title", content: "Majestic IT/AI Solutions" },
-      { property: "og:description", content: "Rock-solid IT. Next-gen AI. Custom rigs, server architecture, and intelligent automation." },
+      {
+        property: "og:description",
+        content:
+          "Rock-solid IT. Next-gen AI. Custom rigs, server architecture, and intelligent automation.",
+      },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary" },
     ],
@@ -87,7 +95,10 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
       { rel: "stylesheet", href: appCss },
       { rel: "preconnect", href: "https://fonts.googleapis.com" },
       { rel: "preconnect", href: "https://fonts.gstatic.com", crossOrigin: "anonymous" },
-      { rel: "stylesheet", href: "https://fonts.googleapis.com/css2?family=Orbitron:wght@900&display=swap" },
+      {
+        rel: "stylesheet",
+        href: "https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap",
+      },
     ],
   }),
 
