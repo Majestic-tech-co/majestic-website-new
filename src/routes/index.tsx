@@ -51,11 +51,13 @@ const SERVICES = [
 
 function Logo({ className = "h-10 w-10" }: { className?: string }) {
   return (
-    <span
-      className={`relative inline-flex shrink-0 overflow-hidden rounded-full bg-[#050505] ring-1 ring-purple-500/40 shadow-[0_0_20px_rgba(147,51,234,0.25)] ${className}`}
-    >
-      <img src="/logo/majestic_logo.png" alt="" className="h-full w-full scale-125 object-cover" />
-    </span>
+    <img
+      src="/logo/crest.webp"
+      alt=""
+      width={256}
+      height={256}
+      className={`shrink-0 object-contain drop-shadow-[0_0_12px_rgba(147,51,234,0.35)] ${className}`}
+    />
   );
 }
 
@@ -139,38 +141,47 @@ function Index() {
       <main className="relative z-10">
         {/* Hero */}
         <section className="mx-auto max-w-6xl px-6 pb-24 pt-36 md:pb-32 md:pt-48">
-          <div className="max-w-3xl">
-            <p className="inline-flex items-center gap-2 rounded-full border border-purple-500/30 bg-purple-500/10 px-3 py-1 text-xs font-medium uppercase tracking-[0.18em] text-purple-300">
-              Next-gen tech solutions
-            </p>
-            <h1 className="mt-6 text-5xl font-semibold leading-[1.05] tracking-tight text-white md:text-7xl">
-              Rock-solid IT.
-              <br />
-              <span className="bg-gradient-to-r from-purple-400 to-purple-600 bg-clip-text text-transparent">
-                Next-gen AI.
-              </span>
-            </h1>
-            <p className="mt-6 max-w-2xl text-lg leading-relaxed text-slate-400">
-              From high-performance custom rigs and robust server architecture to cutting-edge
-              intelligent automation. We are your all-in-one technology partner.
-            </p>
-            <div className="mt-10 flex flex-col gap-3 sm:flex-row">
-              <Button
-                asChild
-                className="h-12 bg-purple-600 px-6 text-base text-white hover:bg-purple-500"
-              >
-                <a href="#contact">
-                  Start a project <ArrowRight />
-                </a>
-              </Button>
-              <Button
-                asChild
-                variant="outline"
-                className="h-12 border-white/15 bg-white/5 px-6 text-base text-white hover:bg-white/10 hover:text-white"
-              >
-                <a href="#services">Explore services</a>
-              </Button>
+          <div className="grid items-center gap-12 lg:grid-cols-[1.25fr_1fr]">
+            <div className="max-w-3xl">
+              <p className="inline-flex items-center gap-2 rounded-full border border-purple-500/30 bg-purple-500/10 px-3 py-1 text-xs font-medium uppercase tracking-[0.18em] text-purple-300">
+                Next-gen tech solutions
+              </p>
+              <h1 className="mt-6 text-5xl font-semibold leading-[1.05] tracking-tight text-white md:text-7xl">
+                Rock-solid IT.
+                <br />
+                <span className="bg-gradient-to-r from-purple-400 to-purple-600 bg-clip-text text-transparent">
+                  Next-gen AI.
+                </span>
+              </h1>
+              <p className="mt-6 max-w-2xl text-lg leading-relaxed text-slate-400">
+                From high-performance custom rigs and robust server architecture to cutting-edge
+                intelligent automation. We are your all-in-one technology partner.
+              </p>
+              <div className="mt-10 flex flex-col gap-3 sm:flex-row">
+                <Button
+                  asChild
+                  className="h-12 bg-purple-600 px-6 text-base text-white hover:bg-purple-500"
+                >
+                  <a href="#contact">
+                    Start a project <ArrowRight />
+                  </a>
+                </Button>
+                <Button
+                  asChild
+                  variant="outline"
+                  className="h-12 border-white/15 bg-white/5 px-6 text-base text-white hover:bg-white/10 hover:text-white"
+                >
+                  <a href="#services">Explore services</a>
+                </Button>
+              </div>
             </div>
+            <img
+              src="/logo/majestictech-logo.webp"
+              alt="MajesticTech IT/AI Solutions logo"
+              width={855}
+              height={609}
+              className="mx-auto hidden w-full max-w-md drop-shadow-[0_0_40px_rgba(147,51,234,0.35)] lg:block"
+            />
           </div>
 
           <ul className="mt-20 grid gap-6 border-t border-white/10 pt-8 text-sm text-slate-400 sm:grid-cols-3">
