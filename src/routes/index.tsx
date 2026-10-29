@@ -1,4 +1,4 @@
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, Link } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import {
   ArrowRight,
@@ -337,6 +337,10 @@ function Index() {
         </div>
         <div className="border-t border-white/5 py-6 text-center text-xs text-slate-500">
           &copy; {new Date().getFullYear()} Majestic IT/AI Solutions. All rights reserved.
+          <span className="mx-2">·</span>
+          <Link to="/privacy" className="transition-colors hover:text-white">
+            Privacy Policy
+          </Link>
         </div>
       </footer>
     </div>
@@ -495,6 +499,13 @@ function ContactForm() {
           "Send message"
         )}
       </Button>
+      <p className="text-center text-xs text-slate-500">
+        We only use your details to reply to you. See our{" "}
+        <Link to="/privacy" className="text-slate-300 underline-offset-4 hover:underline">
+          privacy policy
+        </Link>
+        .
+      </p>
     </form>
   );
 }
