@@ -75,19 +75,20 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
     meta: [
       { charSet: "utf-8" },
       { name: "viewport", content: "width=device-width, initial-scale=1" },
-      { title: "Majestic IT/AI Solutions" },
+      { title: "MajesticTech IT/AI Solutions | AI Automation & Managed IT in Winnipeg" },
       {
         name: "description",
         content:
-          "Rock-solid IT and next-gen AI. From custom PC builds and robust infrastructure to intelligent automation — your all-in-one technology partner.",
+          "Winnipeg AI automation, custom AI assistants and managed IT for businesses big and small. Rock-solid IT and next-gen AI from MajesticTech IT/AI Solutions.",
       },
-      { property: "og:title", content: "Majestic IT/AI Solutions" },
+      { property: "og:title", content: "MajesticTech IT/AI Solutions" },
       {
         property: "og:description",
         content:
-          "Rock-solid IT. Next-gen AI. Custom rigs, server architecture, and intelligent automation.",
+          "Rock-solid IT. Next-gen AI. AI automation and managed IT for Winnipeg businesses.",
       },
       { property: "og:type", content: "website" },
+      { property: "og:locale", content: "en_CA" },
       { name: "twitter:card", content: "summary" },
     ],
     links: [

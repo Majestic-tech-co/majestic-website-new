@@ -4,11 +4,11 @@ import { ArrowLeft } from "lucide-react";
 export const Route = createFileRoute("/privacy")({
   head: () => ({
     meta: [
-      { title: "Privacy Policy | Majestic IT/AI Solutions" },
+      { title: "Privacy Policy | MajesticTech IT/AI Solutions" },
       {
         name: "description",
         content:
-          "How Majestic IT/AI Solutions collects, uses and protects your personal information.",
+          "How MajesticTech IT/AI Solutions collects, uses and protects your personal information.",
       },
     ],
   }),
@@ -52,7 +52,7 @@ function PrivacyPolicy() {
         <div className="mt-12 space-y-10 leading-relaxed">
           <Section title="Who we are">
             <p>
-              Majestic IT/AI Solutions ("we", "us") provides IT and AI services. This policy
+              MajesticTech IT/AI Solutions ("we", "us") provides IT and AI services. This policy
               explains what personal information we collect through majestictech.ca, why we collect
               it, and how we handle it, in line with Canada's Personal Information Protection and
               Electronic Documents Act (PIPEDA).
@@ -179,7 +179,7 @@ function PrivacyPolicy() {
       </main>
 
       <footer className="relative z-10 border-t border-white/5 py-6 text-center text-xs text-slate-500">
-        &copy; {new Date().getFullYear()} Majestic IT/AI Solutions. All rights reserved.
+        &copy; {new Date().getFullYear()} MajesticTech IT/AI Solutions. All rights reserved.
       </footer>
     </div>
   );

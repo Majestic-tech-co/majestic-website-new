@@ -1,10 +1,12 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { z } from "zod";
+import { SERVICE_OPTIONS } from "@/lib/services";
 
 const ContactSchema = z.object({
   name: z.string().trim().min(1, "Name is required").max(100),
   company: z.string().trim().min(1, "Company is required").max(150),
   email: z.string().trim().email("Invalid email").max(255),
+  service: z.enum(SERVICE_OPTIONS, { message: "Please choose an option" }),
   phone: z.string().trim().max(40).optional().or(z.literal("")),
   message: z.string().trim().min(10, "Please add a bit more detail").max(2000),
   // Honeypot - bots fill this; real users leave it blank
@@ -25,7 +27,7 @@ const GLOBAL_MAX_EMAILS = 30;
 let emailsSent: number[] = [];
 
 const DEFAULT_TO_EMAIL = "majestic-it@majestictech.ca";
-const DEFAULT_FROM_EMAIL = "Majestic Website <website@majestictech.ca>";
+const DEFAULT_FROM_EMAIL = "MajesticTech Website <website@majestictech.ca>";
 
 // Only trust the IP header the hosting platform sets itself. Any other header
 // passes through from the client untouched and can be forged per request.
@@ -87,6 +89,7 @@ type Submission = {
   company: string;
   email: string;
   phone?: string;
+  service: string;
   message: string;
 };
 
@@ -98,7 +101,7 @@ async function sendInquiryEmail(submission: Submission): Promise<boolean> {
     return false;
   }
 
-  const { name, company, email, phone, message } = submission;
+  const { name, company, email, phone, service, message } = submission;
   const oneLine = (value: string) => value.replace(/[\r\n]+/g, " ");
 
   const res = await fetch("https://api.resend.com/emails", {
@@ -111,12 +114,13 @@ async function sendInquiryEmail(submission: Submission): Promise<boolean> {
       from: process.env.CONTACT_FROM_EMAIL || DEFAULT_FROM_EMAIL,
       to: [process.env.CONTACT_TO_EMAIL || DEFAULT_TO_EMAIL],
       reply_to: email,
-      subject: oneLine(`New inquiry from ${name} (${company})`),
+      subject: oneLine(`New inquiry: ${service} from ${name} (${company})`),
       text: [
         `Name: ${oneLine(name)}`,
         `Company: ${oneLine(company)}`,
         `Email: ${email}`,
         `Phone: ${oneLine(phone || "—")}`,
+        `Interested in: ${service}`,
         "",
         "Message:",
         message,
@@ -181,7 +185,7 @@ export const Route = createFileRoute("/api/public/contact")({
           );
         }
 
-        const { name, company, email, phone, message, website } = parsed.data;
+        const { name, company, email, phone, service, message, website } = parsed.data;
 
         // Honeypot: silently accept
         if (website && website.length > 0) {
@@ -194,7 +198,7 @@ export const Route = createFileRoute("/api/public/contact")({
 
         let sent = false;
         try {
-          sent = await sendInquiryEmail({ name, company, email, phone, message });
+          sent = await sendInquiryEmail({ name, company, email, phone, service, message });
         } catch (error) {
           console.error("[contact] Resend request failed", error);
         }
